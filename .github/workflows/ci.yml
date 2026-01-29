@@ -2,56 +2,54 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: true
       matrix:
         node-version: [18.x, 20.x]
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: '**/package-lock.json'
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
 
-    # Client Steps
-    - name: Install Client Dependencies
-      run: |
-        cd client
-        npm ci
+      # ---------- Client ----------
+      - name: Install Client Dependencies
+        working-directory: client
+        run: npm ci
 
-    - name: Lint Client
-      run: |
-        cd client
-        npm run lint
+      - name: Lint Client
+        working-directory: client
+        run: npm run lint
 
-    - name: Test Client
-      run: |
-        cd client
-        npm run test -- --run
+      - name: Test Client
+        working-directory: client
+        run: npm run test -- --ci --run
 
-    - name: Build Client
-      run: |
-        cd client
-        npm run build
+      - name: Build Client
+        working-directory: client
+        run: npm run build
 
-    # Server Steps
-    - name: Install Server Dependencies
-      run: |
-        cd server
-        npm ci
+      # ---------- Server ----------
+      - name: Install Server Dependencies
+        working-directory: server
+        run: npm ci
 
-    - name: Test Server
-      run: |
-        cd server
-        npm test
+      - name: Test Server
+        working-directory: server
+        run: npm test
